@@ -1,11 +1,16 @@
 {
   "name": "kaspa-pool-backend",
   "version": "1.0.0",
+  "description": "API backend pour la Kaspa Mining Pool",
   "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Toi",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "mongodb": "^5.7.0",
     "dotenv": "^16.0.3",
-    "node-cron": "^3.0.2"
+    "express": "^4.18.2",
+    "mongodb": "^5.6.0"
   }
 }
