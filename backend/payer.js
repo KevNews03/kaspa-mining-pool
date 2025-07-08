@@ -1,29 +1,29 @@
-// Basic simulation of Kaspa pool payout logic
 require('dotenv').config();
-const { MongoClient } = require("mongodb");
+const { MongoClient } = require('mongodb');
 
-async function distributeRewards() {
+async function processPayments() {
   const mongo = new MongoClient(process.env.MONGODB_URI);
   await mongo.connect();
   const db = mongo.db();
 
-  const miners = await db.collection("shares").aggregate([
-    { $group: { _id: "$address", total: { $sum: "$difficulty" } } }
-  ]).toArray();
-
-  const total = miners.reduce((acc, m) => acc + m.total, 0);
-  console.log("Total shares:", total);
+  const miners = await db.collection("miners").find({}).toArray();
 
   for (const miner of miners) {
-    const percent = miner.total / total;
-    const reward = percent * 1000; // simulate 1000 KAS block
+    const reward = (miner.hashrate || 0) * 0.0001; // Simulé
     const fee = reward * (parseFloat(process.env.FEE_PERCENT) / 100);
     const payout = reward - fee;
 
-    console.log(`Pay ${miner._id} : ${payout.toFixed(2)} KAS`);
-    console.log(`Fee: ${fee.toFixed(2)} KAS to ${process.env.FEE_ADDRESS}`);
+    console.log(`💸 Paiement à ${miner.address}: ${payout.toFixed(4)} KAS (fee: ${fee.toFixed(4)})`);
+
+    // Met à jour la date du dernier paiement
+    await db.collection("miners").updateOne(
+      { address: miner.address },
+      { $set: { lastPayment: new Date() } }
+    );
   }
 
+  console.log("✅ Paiements simulés terminés");
   await mongo.close();
 }
-distributeRewards();
+
+processPayments();
