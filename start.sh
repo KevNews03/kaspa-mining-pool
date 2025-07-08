@@ -1,13 +1,28 @@
 #!/bin/bash
 
-echo "🚀 Démarrage de la Pool Kaspa..."
+echo "🚀 Démarrage complet de la Kaspa Mining Pool..."
 
-systemctl start mongodb
+# Lancement de MongoDB (en arrière-plan si local)
+if ! pgrep mongod > /dev/null; then
+  echo "🟡 Lancement de MongoDB local..."
+  mongod --dbpath ./data --bind_ip 127.0.0.1 --port 27017 > logs/mongo.log 2>&1 &
+  sleep 3
+else
+  echo "✅ MongoDB déjà actif"
+fi
 
-cd /opt/kaspa-mining-pool/backend
-nohup node server.js > backend.log 2>&1 &
+# Lancement du backend
+echo "🔧 Lancement du backend API..."
+cd backend
+nohup node server.js > ../logs/backend.log 2>&1 &
+cd ..
 
-cd ../stratum
-nohup node stratum.js > stratum.log 2>&1 &
+# Lancement du serveur Stratum
+echo "🔧 Lancement du serveur Stratum..."
+cd stratum
+nohup node stratum.js > ../logs/stratum.log 2>&1 &
+cd ..
 
-echo "✅ Pool lancée"
+echo "✅ Tout est lancé !"
+echo "🌐 Backend : http://localhost:$PORT"
+echo "🔗 Stratum : tcp://localhost:$STRATUM_PORT"
