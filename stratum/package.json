@@ -1,8 +1,14 @@
 {
   "name": "kaspa-stratum",
   "version": "1.0.0",
+  "description": "Stratum serveur pour Kaspa Pool",
   "main": "stratum.js",
+  "scripts": {
+    "start": "node stratum.js"
+  },
   "dependencies": {
+    "dotenv": "^16.0.3",
+    "mongodb": "^5.6.0",
     "uuid": "^9.0.0"
   }
 }
