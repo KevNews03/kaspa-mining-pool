@@ -1,40 +1,28 @@
-async function fetchStats() {
-  const res = await fetch('/api/stats');
-  const data = await res.json();
-
-  document.getElementById('hashrate').innerText = data.hashrate + ' H/s';
-  document.getElementById('miners').innerText = data.miners;
-  document.getElementById('blocks').innerText = data.blocksFound;
-  document.getElementById('payment').innerText = data.lastPayment || "N/A";
-
-  updateChart(data.hashrate);
-}
-
-let chart;
-function updateChart(currentHashrate) {
-  if (!chart) {
-    const ctx = document.getElementById('hashrateChart').getContext('2d');
-    chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: Array(10).fill(''),
-        datasets: [{
-          label: 'Hashrate',
-          data: Array(10).fill(currentHashrate),
-          borderColor: 'rgba(0, 255, 255, 0.7)',
-          borderWidth: 2
-        }]
-      },
-      options: {
-        scales: { y: { beginAtZero: true } }
-      }
-    });
-  } else {
-    chart.data.datasets[0].data.push(currentHashrate);
-    chart.data.datasets[0].data.shift();
-    chart.update();
+async function loadMiner() {
+  const addr = document.getElementById('minerAddress').value.trim();
+  if (!addr.startsWith('kaspa:')) {
+    return alert('Adresse Kaspa invalide.');
+  }
+  try {
+    const res = await fetch(`/api/miner/${addr}`);
+    if (!res.ok) throw new Error('Mineur non trouvÃ©');
+    const m = await res.json();
+    document.getElementById('miner-hashrate').innerText = m.hashrate + ' H/s';
+    document.getElementById('miner-shares').innerText = m.shares;
+    document.getElementById('miner-payment').innerText = m.lastPayment || 'â€“';
+    document.getElementById('miner-status').innerText = m.active ? 'Active' : 'Inactive';
+    document.getElementById('minerSection').classList.remove('d-none');
+  } catch (err) {
+    alert(err.message || 'Erreur lors du chargement du mineur');
   }
 }
 
-setInterval(fetchStats, 10000);
-fetchStats();
+// Initialisation
+document.getElementById('minerAddress').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') loadMiner();
+});
+
+fetchNetwork();
+fetchPool();
+setInterval(fetchNetwork, 30000);  // Toutes les 30s
+setInterval(fetchPool, 10000);
