@@ -1,54 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Kaspa Mining Pool Dashboard</title>
+  <title>Kaspa Pool Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap CSS pour l’UI -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- Chart.js pour les graphiques -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { background: #111; color: #eee; }
-    .card { background: #1e1e1e; border: none; }
-    input { background: #333; color: #eee; border: 1px solid #444; }
+    body { background: #121212; color: #fff; }
+    .card { background: #1f1f1f; border: 1px solid #333; }
+    input, button { background: #2a2a2a; color: #fff; border: 1px solid #444; }
+    .section-title { border-bottom: 1px solid #333; padding-bottom: .5rem; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
   <div class="container py-4">
-    <h1 class="text-center mb-4">Kaspa Pool Dashboard</h1>
+    <h1 class="text-center mb-4">Kaspa Pool & Network Dashboard</h1>
 
+    <!-- Partie : Network Stats -->
+    <div class="mb-5">
+      <h2 class="section-title">Statistiques du réseau Kaspa</h2>
+      <div class="row g-3">
+        <div class="col-md-3"><div class="card p-3"><h6>Difficulté</h6><p id="net-difficulty">–</p></div></div>
+        <div class="col-md-3"><div class="card p-3"><h6>Hauteur de bloc</h6><p id="net-blockheight">–</p></div></div>
+        <div class="col-md-3"><div class="card p-3"><h6>Hashrate réseau</h6><p id="net-hashrate">–</p></div></div>
+        <div class="col-md-3"><div class="card p-3"><h6>TPS</h6><p id="net-tps">–</p></div></div>
+      </div>
+    </div>
+
+    <!-- Partie : Pool Stats -->
+    <div class="mb-5">
+      <h2 class="section-title">Statistiques de la pool</h2>
+      <div class="row g-3">
+        <div class="col-md-3"><div class="card p-3"><h6>Total Hashrate</h6><p id="pool-hashrate">–</p></div></div>
+        <div class="col-md-3"><div class="card p-3"><h6>Mineurs connectés</h6><p id="pool-miners">–</p></div></div>
+        <div class="col-md-3"><div class="card p-3"><h6>Blocs trouvés</h6><p id="pool-blocks">–</p></div></div>
+        <div class="col-md-3"><div class="card p-3"><h6>Dernier paiement</h6><p id="pool-payment">–</p></div></div>
+      </div>
+      <canvas id="poolChart" class="mt-4"></canvas>
+    </div>
+
+    <!-- Partie : Miner Stats -->
     <div class="mb-4 text-center">
-      <input id="addressInput" type="text" class="form-control w-50 d-inline" placeholder="kaspa:... (your wallet address)" />
-      <button onclick="loadMinerStats()" class="btn btn-primary ms-2">Check</button>
+      <input
+        id="minerAddress"
+        type="text"
+        class="form-control w-50 d-inline"
+        placeholder="kaspa:... Ton adresse"
+      />
+      <button onclick="loadMiner()" class="btn btn-primary ms-2">Voir mes stats</button>
     </div>
-
-    <div id="minerStats" class="row g-3 mb-5 d-none">
-      <div class="col-md-3"><div class="card p-3"><h5>Miner Hashrate</h5><p id="minerHashrate">--</p></div></div>
-      <div class="col-md-3"><div class="card p-3"><h5>Shares</h5><p id="minerShares">--</p></div></div>
-      <div class="col-md-3"><div class="card p-3"><h5>Last Payment</h5><p id="minerPayment">--</p></div></div>
-      <div class="col-md-3"><div class="card p-3"><h5>Status</h5><p id="minerStatus">--</p></div></div>
+    <div id="minerSection" class="row g-3 d-none mb-5">
+      <div class="col-md-3"><div class="card p-3"><h6>Mon Hashrate</h6><p id="miner-hashrate">–</p></div></div>
+      <div class="col-md-3"><div class="card p-3"><h6>Mes shares</h6><p id="miner-shares">–</p></div></div>
+      <div class="col-md-3"><div class="card p-3"><h6>Dernier paiement</h6><p id="miner-payment">–</p></div></div>
+      <div class="col-md-3"><div class="card p-3"><h6>Statut</h6><p id="miner-status">–</p></div></div>
     </div>
-
-    <div class="row g-4">
-      <div class="col-md-3"><div class="card p-3"><h5>Total Hashrate</h5><p id="hashrate">--</p></div></div>
-      <div class="col-md-3"><div class="card p-3"><h5>Miners Connected</h5><p id="miners">--</p></div></div>
-      <div class="col-md-3"><div class="card p-3"><h5>Blocks Found</h5><p id="blocks">--</p></div></div>
-      <div class="col-md-3"><div class="card p-3"><h5>Last Payment</h5><p id="payment">--</p></div></div>
-    </div>
-
-    <canvas id="hashrateChart" class="mt-5"></canvas>
   </div>
 
   <script>
-    let chart;
-    const ctx = document.getElementById('hashrateChart').getContext('2d');
-    chart = new Chart(ctx, {
+    // Graphique global pool
+    const poolCtx = document.getElementById('poolChart').getContext('2d');
+    const poolChart = new Chart(poolCtx, {
       type: 'line',
       data: {
         labels: Array(10).fill(''),
         datasets: [{
-          label: 'Pool Hashrate',
+          label: 'Pool Hashrate (H/s)',
           data: Array(10).fill(0),
-          borderColor: 'cyan',
+          borderColor: '#00ffff',
           borderWidth: 2
         }]
       },
@@ -57,39 +82,55 @@
       }
     });
 
-    async function fetchStats() {
-      const res = await fetch('/api/stats');
-      const data = await res.json();
-      document.getElementById('hashrate').innerText = data.hashrate + ' H/s';
-      document.getElementById('miners').innerText = data.miners;
-      document.getElementById('blocks').innerText = data.blocksFound;
-      document.getElementById('payment').innerText = data.lastPayment || "N/A";
-
-      chart.data.datasets[0].data.push(data.hashrate);
-      chart.data.datasets[0].data.shift();
-      chart.update();
+    // Récupère stats réseau
+    async function fetchNetwork() {
+      const res = await fetch('/api/network');
+      const d = await res.json();
+      document.getElementById('net-difficulty').innerText = d.difficulty;
+      document.getElementById('net-blockheight').innerText = d.blockHeight;
+      document.getElementById('net-hashrate').innerText = d.estNetworkHashps + ' H/s';
+      document.getElementById('net-tps').innerText = d.selectedTipHash;
     }
 
-    async function loadMinerStats() {
-      const addr = document.getElementById("addressInput").value.trim();
-      if (!addr.startsWith("kaspa:")) return alert("Adresse invalide");
+    // Récupère stats pool
+    async function fetchPool() {
+      const res = await fetch('/api/stats');
+      const p = await res.json();
+      document.getElementById('pool-hashrate').innerText = p.hashrate + ' H/s';
+      document.getElementById('pool-miners').innerText = p.miners;
+      document.getElementById('pool-blocks').innerText = p.blocksFound;
+      document.getElementById('pool-payment').innerText = p.lastPayment || '–';
 
+      poolChart.data.datasets[0].data.push(p.hashrate);
+      poolChart.data.datasets[0].data.shift();
+      poolChart.update();
+    }
+
+    // Récupère stats d’un mineur
+    async function loadMiner() {
+      const addr = document.getElementById('minerAddress').value.trim();
+      if (!addr.startsWith('kaspa:')) {
+        return alert('Adresse invalide');
+      }
       try {
         const res = await fetch(`/api/miner/${addr}`);
         if (!res.ok) throw new Error();
-        const data = await res.json();
-        document.getElementById('minerHashrate').innerText = data.hashrate + ' H/s';
-        document.getElementById('minerShares').innerText = data.shares;
-        document.getElementById('minerPayment').innerText = data.lastPayment || 'N/A';
-        document.getElementById('minerStatus').innerText = data.active ? 'Active' : 'Inactive';
-        document.getElementById('minerStats').classList.remove("d-none");
+        const m = await res.json();
+        document.getElementById('miner-hashrate').innerText = m.hashrate + ' H/s';
+        document.getElementById('miner-shares').innerText = m.shares;
+        document.getElementById('miner-payment').innerText = m.lastPayment || '–';
+        document.getElementById('miner-status').innerText = m.active ? 'Active' : 'Inactive';
+        document.getElementById('minerSection').classList.remove('d-none');
       } catch {
-        alert("Adresse inconnue ou erreur serveur");
+        alert('Mineur non trouvé');
       }
     }
 
-    fetchStats();
-    setInterval(fetchStats, 10000);
+    // Initialisation et rafraîchissement
+    fetchNetwork();
+    fetchPool();
+    setInterval(fetchNetwork, 30000);  // réseau toutes les 30s
+    setInterval(fetchPool, 10000);     // pool toutes les 10s
   </script>
 </body>
 </html>
