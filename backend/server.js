@@ -1,4 +1,3 @@
-// Backend server logic for Kaspa pool
 require('dotenv').config();
 const express = require('express');
 const { MongoClient } = require('mongodb');
@@ -10,12 +9,13 @@ app.use(express.json());
 const mongo = new MongoClient(process.env.MONGODB_URI);
 let db;
 
+// Connexion MongoDB
 mongo.connect().then(() => {
   db = mongo.db();
   console.log("✅ MongoDB connecté");
 });
 
-// ✅ Endpoint global pool stats
+// Route API : statistiques globales du pool
 app.get('/api/stats', async (req, res) => {
   try {
     const stats = await db.collection("pool_stats").findOne({}, { sort: { time: -1 } }) || {};
@@ -30,12 +30,12 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-// ✅ Endpoint stats pour un mineur
+// Route API : statistiques spécifiques d’un mineur
 app.get('/api/miner/:address', async (req, res) => {
   try {
     const addr = req.params.address;
     const miner = await db.collection("miners").findOne({ address: addr });
-    if (!miner) return res.status(404).send("Miner not found");
+    if (!miner) return res.status(404).send("Mineur non trouvé");
     res.json({
       address: miner.address,
       hashrate: miner.hashrate || 0,
@@ -49,5 +49,5 @@ app.get('/api/miner/:address', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`✅ API lancée sur http://localhost:${port}`);
+  console.log(`✅ API Backend en écoute sur http://localhost:${port}`);
 });
