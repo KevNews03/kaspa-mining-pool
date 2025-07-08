@@ -1,1 +1,18 @@
-<html><body><h1>Admin Panel</h1></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login - Kaspa Pool</title>
+  <link rel="stylesheet" href="../style.css"/>
+</head>
+<body class="bg-dark text-light text-center p-5">
+  <h2>Admin Login</h2>
+  <form onsubmit="login(event)">
+    <input id="user" type="text" placeholder="Username"/><br/><br/>
+    <input id="pass" type="password" placeholder="Password"/><br/><br/>
+    <button type="submit">Login</button>
+  </form>
+  <div id="result" class="mt-3"></div>
+  <script src="admin.js"></script>
+</body>
+</html>
