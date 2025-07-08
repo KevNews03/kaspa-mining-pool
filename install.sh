@@ -1,23 +1,23 @@
 #!/bin/bash
 
-echo "🔧 Installation de la Pool Kaspa en cours..."
+echo "📦 Installation de la Kaspa Mining Pool..."
 
-apt update && apt upgrade -y
-apt install -y git curl build-essential unzip
+# Backend
+echo "📁 Installation des dépendances backend..."
+cd backend
+npm install
+cd ..
 
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-apt install -y nodejs
+# Stratum
+echo "📁 Installation des dépendances stratum..."
+cd stratum
+npm install
+cd ..
 
-apt install -y mongodb
-systemctl enable mongodb
-systemctl start mongodb
+# Création des dossiers de logs et data
+echo "📁 Préparation des dossiers..."
+mkdir -p logs
+mkdir -p data
 
-cd /opt
-git clone https://github.com/KevNews03/kaspa-mining-pool.git
-cd kaspa-mining-pool
-
-cd backend && npm install
-cd ../stratum && npm install
-cd ../frontend
-
-echo "✅ Installation terminée"
+echo "✅ Installation terminée."
+echo "💡 Tu peux maintenant lancer la pool avec : ./start.sh"
