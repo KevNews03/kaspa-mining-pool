@@ -1,0 +1,8 @@
+{
+  "name": "kaspa-stratum",
+  "version": "1.0.0",
+  "main": "stratum.js",
+  "dependencies": {
+    "uuid": "^9.0.0"
+  }
+}
